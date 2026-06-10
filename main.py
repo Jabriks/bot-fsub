@@ -1,30 +1,39 @@
+
 import os
+import threading
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import UserNotParticipant
 
-# Mengambil data dari Environment Variables (Langkah yang kita bahas tadi)
+# --- KODE PANCINGAN UNTUK RENDER WEB SERVICE ---
+def run_dummy_server():
+    # Render mewajibkan aplikasi web mendengarkan Port yang mereka sediakan
+    port = int(os.environ.get("PORT", 8080))
+    server_address = ("", port)
+    httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
+    print(self_name := f"Dummy web server berjalan di port {port}")
+    httpd.serve_forever()
+
+# Jalankan server pancingan di latar belakang (thread terpisah)
+threading.Thread(target=run_dummy_server, daemon=True).start()
+# ------------------------------------------------
+
+# --- KODE BOT TELEGRAM KAMU ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-
-# USERNAME CHANNEL YANG WAJIB DI-SUBSCRIBE (Ganti dengan channelmu tanpa @)
-CHANNEL_USERNAME = "NamaChannelKamu" 
+CHANNEL_USERNAME = "NamaChannelKamu" # Ganti dengan username channelmu tanpa @
 
 bot = Client("fsub_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 @bot.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
     user_id = message.from_user.id
-    
     try:
-        # Cek apakah user sudah join channel
         await client.get_chat_member(CHANNEL_USERNAME, user_id)
-        # Jika sudah join, kirim pesan ini:
         await message.reply_text(f"Halo {message.from_user.mention}! Kamu sudah subscribe. Silakan gunakan bot.")
-        
     except UserNotParticipant:
-        # Jika belum join, suruh join dulu:
         await message.reply_text(
             text=f"Halo {message.from_user.mention}!\n\nKamu harus bergabung ke Channel kami terlebih dahulu sebelum bisa menggunakan bot ini.",
             reply_markup=InlineKeyboardMarkup([
@@ -33,5 +42,5 @@ async def start_command(client, message):
             ])
         )
 
-print("Bot berhasil dijalankan...")
+print("Bot fsub berhasil dijalankan...")
 bot.run()
